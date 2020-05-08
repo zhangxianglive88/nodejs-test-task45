@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="form-wrapper">
+        <h1>登录</h1>
+        <form id="signUpForm">
+            <div class="row">
+                <label>邮箱</label>
+                <input type="text" name="email">
+                <span class="error"></span>
+            </div>
+            <div class="row">
+                <label>密码</label>
+                <input type="password" name="password">
+                <span class="error"></span>
+            </div>
+            <div class="row">
+                <input type="submit" value="登录">
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.0/jquery.js"></script>
+    <script>
+        let $form = $('#signUpForm')
+        $form.on('submit', (e) => {
+            e.preventDefault()
+            let hash = {}
+            let need = ['email', 'password']
+            need.forEach((name) => {
+                let value = $form.find(`[name=${name}]`).val()
+                hash[name] = value
+            })
+            $form.find('.error').each((index, span)=>{
+                $(span).text('')
+            })
+            // 验证用户信息
+            if(hash['email'] === ''){
+                $form.find('[name="email"]').siblings('.error').text('兄弟，填邮箱呀')
+                return
+            }
+            if(hash['password'] === ''){
+                $form.find('[name="password"]').siblings('.error').text('兄弟，填密码呀')
+                return
+            }
+
+            // 向服务器发送Ajax请求
+            $.post('/sign_in', hash) // 返回的是promise
+                .then((response) => {
+                    window.location.href = '/'  // 跳转到首页
+                }, (request) => {
+                    alert('邮箱与密码不匹配！')
+                })
+        })
+
+    </script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,31 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.form-wrapper {
+    border: 1px solid #ddd;
+    padding: 20px;
+    width: 450px;
+}
+
+.form-wrapper .row {
+    margin: 10px 0;
+}
+
+.form-wrapper .row>label {
+    display: inline-block;
+    min-width: 4em;
+}
