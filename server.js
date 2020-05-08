@@ -2,6 +2,7 @@ var http = require('http')
 var fs = require('fs')
 var url = require('url')
 var port = process.argv[2]
+var md5 = require('md5')
 
 if (!port) {
   console.log('请指定端口号好不啦？\nnode server.js 8888 这样不会吗？')
@@ -9,7 +10,6 @@ if (!port) {
 }
 
 let sessions = {  //存储用户id
-
 }
 
 var server = http.createServer(function (request, response) {
@@ -25,26 +25,33 @@ var server = http.createServer(function (request, response) {
 
   console.log('有个傻子发请求过来啦！路径（带查询参数）为：' + pathWithQuery)
 
-  if(path === '/js/main.js'){
+  if (path === '/js/main.js') {
     let string = fs.readFileSync('./js/main.js', 'utf8')
-    response.setHeader('Content-Type', 'applicatoin/javascript;charset=utf8')
-    response.setHeader('Cache-Control', 'max-age=30')
-    response.write(string)
+    response.setHeader('Content-Type', 'application/javascript;charset=utf8')
+    // response.setHeader('Cache-Control', 'max-age=300000000')
+    let fileMd5 = md5(string)
+    if (request.headers['if-none-match'] === fileMd5) {
+      // 没有响应体
+      response.statusCode = 304  // 和浏览器说我没改过，则不下载
+    } else {
+      response.setHeader('ETag', fileMd5)
+      response.write(string)
+    }
     response.end()
-  }else if(path === '/css/default.css'){
+  } else if (path === '/css/default.css') {
     let string = fs.readFileSync('./css/default.css', 'utf8')
-    response.setHeader('Content-Type', 'applicatoin/css;charset=utf8')
-    response.setHeader('Cache-Control', 'max-age=30')
+    response.setHeader('Content-Type', 'application/css;charset=utf8')
+    // response.setHeader('Cache-Control', 'max-age=3000000')
     response.write(string)
     response.end()
-  }else if (path === '/') {
+  } else if (path === '/') {
     let string = fs.readFileSync('./index.html', 'utf8')
-    let cookies = '' 
-    if(request.headers.cookie){ // sign_in_email=1203901485@qq.com; a=1; b=2
-      cookies = request.headers.cookie.split('; ') 
+    let cookies = ''
+    if (request.headers.cookie) { // sign_in_email=1203901485@qq.com; a=1; b=2
+      cookies = request.headers.cookie.split('; ')
     }
     let hash = {}
-    for(let i = 0; i < cookies.length; i++){
+    for (let i = 0; i < cookies.length; i++) {
       let parts = cookies[i].split('=')
       let key = parts[0]
       let value = parts[1]
@@ -52,21 +59,21 @@ var server = http.createServer(function (request, response) {
     }
     let mySession = sessions[hash.sessionId]
     let email
-    if(mySession){
+    if (mySession) {
       email = mySession.sign_in_email
     }
     let users = fs.readFileSync('./db/users', 'utf-8')
     users = JSON.parse(users)
     let foundUser
-    for(let i = 0; i < users.length; i++){
-      if(users[i].email === email){
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].email === email) {
         foundUser = users[i]
         break
       }
     }
-    if(foundUser){
+    if (foundUser) {
       string = string.replace('__password__', foundUser.password)
-    }else{
+    } else {
       string = string.replace('__password__', '不知道')
     }
     response.statusCode = 200
@@ -164,7 +171,7 @@ var server = http.createServer(function (request, response) {
         }
         if (found) {  // 登录成功之后，返回一个Set-Cookie，跳转到首页
           let sessionId = Math.random() * 10000
-          sessions[sessionId] = {sign_in_email: email}
+          sessions[sessionId] = { sign_in_email: email }
           response.setHeader('Set-Cookie', `sessionId=${sessionId}`)
           response.statusCode = 200
         } else {
